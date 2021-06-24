@@ -14,6 +14,7 @@ http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/
 	<flow name="queuejmsFlow">
 		<http:listener config-ref="HTTP_Listener_Configuration" path="/ab" doc:name="HTTP"/>
 		<logger message="jms logger" level="INFO" doc:name="Logger"/>
+		<set-payload value="#[payload]" doc:name="Set Payload"/>
 		<jms:outbound-endpoint topic="ptopic" connector-ref="Active_MQ" doc:name="JMS"/>
 	</flow>
 	<flow name="queuejmsFlow1">
