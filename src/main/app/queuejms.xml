@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd">
+	<http:listener-config name="HTTP_Listener_Configuration" host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration"/>
+	<jms:activemq-connector name="Active_MQ" username="admin" password="admin" brokerURL="tcp://localhost:61616" validateConnections="true" doc:name="Active MQ"/>
+	<db:mysql-config name="MySQL_Configuration" host="localhost" port="3306" user="root" password="root" database="test1" doc:name="MySQL Configuration"/>
+	<flow name="queuejmsFlow">
+		<http:listener config-ref="HTTP_Listener_Configuration" path="/ab" doc:name="HTTP"/>
+		<logger message="jms logger" level="INFO" doc:name="Logger"/>
+		<jms:outbound-endpoint topic="ptopic" connector-ref="Active_MQ" doc:name="JMS"/>
+	</flow>
+	<flow name="queuejmsFlow1">
+		<jms:inbound-endpoint topic="ptopic" connector-ref="Active_MQ" doc:name="JMS"/>
+		<logger message="queue start logger" level="INFO" doc:name="Logger"/>
+		<set-variable variableName="eid" value="#[json:eid]" doc:name="Variable"/>
+		<set-variable variableName="ename" value="#[json:ename]" doc:name="Variable"/>
+		<set-variable variableName="eage" value="#[json:eage]" doc:name="Variable"/>
+		<set-variable variableName="eaddress" value="#[json:eaddress]" doc:name="Variable"/>
+		<db:insert config-ref="MySQL_Configuration" doc:name="Database">
+			<db:parameterized-query><![CDATA[insert into emp values('#[flowVars.eid]','#[flowVars.ename]','#[flowVars.eage]','#[flowVars.eaddress]')]]></db:parameterized-query>
+		</db:insert>
+		<object-to-string-transformer doc:name="Object to String"/>
+		<logger message="queue end logger" level="INFO" doc:name="Logger"/>
+	</flow>
+</mule>
